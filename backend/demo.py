@@ -1,21 +1,25 @@
+from dotenv import load_dotenv
 from langchain_community.document_loaders import PyMuPDFLoader
 import os
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain.chains import ConversationalRetrievalChain
+
+# Load environment variables from .env file
+load_dotenv()
 
 file_path = "AI_Engineer.pdf"
 loader = PyMuPDFLoader(file_path)
 docs = loader.load()
 print(docs)
-import getpass
-import os
 
-if not os.environ.get("OPENAI_API_KEY"):
-  os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter API key for OpenAI: ")
-
-from langchain_openai import OpenAIEmbeddings
-
+# Using environment variable directly
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
+# Initialize ChatOpenAI
+chat = ChatOpenAI(
+    model="gpt-4",
+    temperature=0
+)
 
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
@@ -44,8 +48,20 @@ qdrant = QdrantVectorStore.from_documents(
     force_recreate=True,
     retrieval_mode=RetrievalMode.DENSE,
 )
+
+# Create a retrieval chain
+qa_chain = ConversationalRetrievalChain.from_llm(
+    llm=chat,
+    retriever=qdrant.as_retriever(search_kwargs={"k": 3}),
+    return_source_documents=True,
+)
+
 print("-------------------------------------------- ")
-query = "Give me Vertex AI Experiences "
-print(query)
-found_docs = qdrant.similarity_search(query)
-print(found_docs)
+query = "Give me Vertex AI Experiences"
+result = qa_chain({"question": query, "chat_history": []})
+print("\nQuestion:", query)
+print("\nAnswer:", result["answer"])
+print("\nSource Documents:")
+for i, doc in enumerate(result["source_documents"]):
+    print(f"\nDocument {i+1}:")
+    print(doc.page_content[:200] + "...")
