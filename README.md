@@ -8,3 +8,6 @@ This repository contains a FastAPI backend and a Vite/React frontend. The backen
 
 The RAG ingestion/search prototype is present. It requires `OPENAI_API_KEY` and QuantDB, has no root-level runbook, and should add authentication, file cleanup safeguards, persistent storage configuration, tests, and deployment instructions before production use.
 
+## Final code review status
+
+The source confirms a FastAPI PDF-to-vector prototype with LangChain PDF loading/chunking, OpenAI embeddings, QuantDB storage/search, and a separate Vite/React frontend. The README should treat this as a prototype: credentials, QuantDB availability, error handling, authentication, and tests are still required for production.
